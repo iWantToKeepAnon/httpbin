@@ -29,8 +29,15 @@ from flask import (
 from six.moves import range as xrange
 from werkzeug.datastructures import WWWAuthenticate, MultiDict
 from werkzeug.http import http_date
-from werkzeug.wrappers import BaseResponse
-from werkzeug.http import parse_authorization_header
+from werkzeug.wrappers import Response as BaseResponse
+try:
+    from werkzeug.http import parse_authorization_header
+except ImportError:
+    from werkzeug.datastructures import Authorization
+    def parse_authorization_header(value):
+        if not value:
+            return None
+        return Authorization.from_header(value)
 from flasgger import Swagger, NO_SANITIZER
 
 from . import filters
@@ -75,9 +82,6 @@ def jsonify(*args, **kwargs):
         response.data += b"\n"
     return response
 
-
-# Prevent WSGI from correcting the casing of the Location header
-BaseResponse.autocorrect_location_header = False
 
 # Find the correct template folder when running from a different location
 tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -511,7 +515,7 @@ def view_deflate_encoded_content():
       - application/json
     responses:
       200:
-        description: Defalte-encoded data.
+        description: Deflate-encoded data.
     """
 
     return jsonify(get_dict("origin", "headers", method=request.method, deflated=True))
@@ -639,7 +643,7 @@ def redirect_to():
         status_code = int(args["status_code"])
         if status_code >= 300 and status_code < 400:
             response.status_code = status_code
-    response.headers["Location"] = args["url"].encode("utf-8")
+    response.headers["Location"] = args["url"]
 
     return response
 
@@ -958,7 +962,7 @@ def basic_auth(user="user", passwd="passwd"):
       - application/json
     responses:
       200:
-        description: Sucessful authentication.
+        description: Successful authentication.
       401:
         description: Unsuccessful authentication.
     """
@@ -986,7 +990,7 @@ def hidden_basic_auth(user="user", passwd="passwd"):
       - application/json
     responses:
       200:
-        description: Sucessful authentication.
+        description: Successful authentication.
       404:
         description: Unsuccessful authentication.
     """
@@ -1011,7 +1015,7 @@ def bearer_auth():
       - application/json
     responses:
       200:
-        description: Sucessful authentication.
+        description: Successful authentication.
       401:
         description: Unsuccessful authentication.
     """
@@ -1048,7 +1052,7 @@ def digest_auth_md5(qop=None, user="user", passwd="passwd"):
       - application/json
     responses:
       200:
-        description: Sucessful authentication.
+        description: Successful authentication.
       401:
         description: Unsuccessful authentication.
     """
@@ -1081,7 +1085,7 @@ def digest_auth_nostale(qop=None, user="user", passwd="passwd", algorithm="MD5")
       - application/json
     responses:
       200:
-        description: Sucessful authentication.
+        description: Successful authentication.
       401:
         description: Unsuccessful authentication.
     """
@@ -1121,7 +1125,7 @@ def digest_auth(
       - application/json
     responses:
       200:
-        description: Sucessful authentication.
+        description: Successful authentication.
       401:
         description: Unsuccessful authentication.
     """

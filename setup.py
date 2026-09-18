@@ -34,8 +34,10 @@ setup(
     test_suite="test_httpbin",
     packages=find_packages(),
     include_package_data = True, # include files listed in MANIFEST.in
+
+    # 'MarkupSafe' and 'itsdangerous' are flask dependencies.
+    # 'raven[flask]' seems unused. (?)  'Flask' is used, is this a mistake?
     install_requires=[
-        'Flask', 'MarkupSafe', 'decorator', 'itsdangerous', 'six', 'brotlipy',
-        'raven[flask]', 'werkzeug>=0.14.1', 'gevent', 'flasgger'
+        'Flask', 'decorator', 'six', 'brotli', 'werkzeug>=0.14.1', 'gevent', 'flasgger'
     ],
 )

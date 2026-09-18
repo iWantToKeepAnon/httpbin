@@ -13,7 +13,14 @@ import re
 import time
 import os
 from hashlib import md5, sha256, sha512
-from werkzeug.http import parse_authorization_header
+try:
+    from werkzeug.http import parse_authorization_header
+except ImportError:
+    from werkzeug.datastructures import Authorization
+    def parse_authorization_header(value):
+        if not value:
+            return None
+        return Authorization.from_header(value)
 from werkzeug.datastructures import WWWAuthenticate
 
 from flask import request, make_response
@@ -23,7 +30,7 @@ from six.moves.urllib.parse import urlparse, urlunparse
 from .structures import CaseInsensitiveDict
 
 
-ASCII_ART = """
+ASCII_ART = r"""
     -=[ teapot ]=-
 
        _...._
@@ -68,10 +75,10 @@ ACCEPTED_MEDIA_TYPES = [
     'image/*'
 ]
 
-ANGRY_ASCII ="""
+ANGRY_ASCII = r"""
           .-''''''-.
         .' _      _ '.
-       /   O      O   \\
+       /   O      O   \
       :                :
       |                |
       :       __       :
@@ -435,7 +442,7 @@ def parse_multi_value_header(header_str):
     if header_str:
         parts = header_str.split(',')
         for part in parts:
-            match = re.search('\s*(W/)?\"?([^"]*)\"?\s*', part)
+            match = re.search(r'\s*(W/)?\"?([^"]*)\"?\s*', part)
             if match is not None:
                 parsed_parts.append(match.group(2))
     return parsed_parts
@@ -467,8 +474,13 @@ def digest_challenge_response(app, qop, algorithm, stale = False):
     opaque = H(os.urandom(10), algorithm)
 
     auth = WWWAuthenticate("digest")
-    auth.set_digest('me@kennethreitz.com', nonce, opaque=opaque,
-                    qop=('auth', 'auth-int') if qop is None else (qop,), algorithm=algorithm)
-    auth.stale = stale
+    qop_value = 'auth, auth-int' if qop is None else qop
+    auth["realm"] = 'me@kennethreitz.com'
+    auth["nonce"] = nonce
+    auth["opaque"] = opaque
+    auth["qop"] = qop_value
+    auth["algorithm"] = algorithm
+    if stale:
+        auth["stale"] = "TRUE"
     response.headers['WWW-Authenticate'] = auth.to_header()
     return response

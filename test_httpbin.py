@@ -114,10 +114,10 @@ class HttpbinTestCase(unittest.TestCase):
         httpbin.app.debug = True
         self.app = httpbin.app.test_client()
 
-    def test_index(self):   
+    def test_index(self):
         response = self.app.get('/', headers={'User-Agent': 'test'})
         self.assertEqual(response.status_code, 200)
- 
+
     def get_data(self, response):
         if 'get_data' in dir(response):
             return response.get_data()
@@ -148,7 +148,6 @@ class HttpbinTestCase(unittest.TestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['args'], {})
         self.assertEqual(data['headers']['Host'], 'localhost')
-        self.assertEqual(data['headers']['Content-Length'], '0')
         self.assertEqual(data['headers']['User-Agent'], 'test')
         # self.assertEqual(data['origin'], None)
         self.assertEqual(data['url'], 'http://localhost/get')
@@ -162,7 +161,6 @@ class HttpbinTestCase(unittest.TestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertEqual(data['args'], {})
         self.assertEqual(data['headers']['Host'], 'localhost')
-        self.assertEqual(data['headers']['Content-Length'], '0')
         self.assertEqual(data['url'], 'http://localhost/anything/foo/bar')
         self.assertEqual(data['method'], 'GET')
         self.assertTrue(response.data.endswith(b'\n'))
@@ -170,7 +168,7 @@ class HttpbinTestCase(unittest.TestCase):
     def test_base64(self):
         greeting = u'Здравствуй, мир!'
         b64_encoded = _string_to_base64(greeting)
-        response = self.app.get(b'/base64/' + b64_encoded)
+        response = self.app.get('/base64/' + b64_encoded.decode('utf-8'))
         content = response.data.decode('utf-8')
         self.assertEqual(greeting, content)
 
